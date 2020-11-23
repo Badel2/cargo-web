@@ -137,7 +137,7 @@ pub struct BuildArgs {
     build_type: BuildType,
     use_system_emscripten: bool,
 
-    is_verbose: bool,
+    verbose_level: u8,
     message_format: MessageFormat,
 
     backend: Option< Backend >,
@@ -162,7 +162,7 @@ impl From<super::Build> for BuildArgs {
             enable_all_features: b.all_features,
             build_type: if b.release { BuildType::Release } else { BuildType::Debug },
             use_system_emscripten: b.use_system_emscripten,
-            is_verbose: b.verbose,
+            verbose_level: b.verbose,
             message_format: MessageFormat::Human,
             backend: b.target,
             runtime: RuntimeKind::Standalone,
@@ -555,7 +555,7 @@ impl Project {
             extra_rustflags,
             extra_environment,
             message_format: self.build_args.message_format,
-            is_verbose: self.build_args.is_verbose,
+            verbose_level: self.build_args.verbose_level,
             use_color: atty::is(Stream::Stdout) && atty::is(Stream::Stderr)
         }
     }
@@ -612,7 +612,8 @@ impl Project {
             .map_err( |err| Error::RuntimeError( "cannot get the target list through rustup".into(), err.into() ) )?;
 
         if !output.status.success() {
-            return Err( "cannot get the target list through rustup: rustup invocation failed".into() );
+            return Ok(());
+            //return Err( "cannot get the target list through rustup: rustup invocation failed".into() );
         }
 
         let mut targets = HashMap::new();

@@ -586,7 +586,7 @@ pub struct BuildConfig {
     pub extra_rustflags: Vec< String >,
     pub extra_environment: Vec< (String, String) >,
     pub message_format: MessageFormat,
-    pub is_verbose: bool,
+    pub verbose_level: u8,
     pub use_color: bool
 }
 
@@ -703,7 +703,7 @@ impl BuildConfig {
             command.arg( &self.features.join( " " ) );
         }
 
-        if self.is_verbose {
+        for _ in 0..self.verbose_level {
             command.arg( "--verbose" );
         }
 
@@ -784,7 +784,7 @@ impl BuildConfig {
         let stderr = BufReader::new( child.stderr.take().unwrap() );
         let stdout = BufReader::new( child.stdout.take().unwrap() );
 
-        let is_verbose = self.is_verbose;
+        let is_verbose = self.verbose_level > 0;
         thread::spawn( move || {
             let mut skip = 0;
             for line in stderr.lines() {
@@ -820,7 +820,14 @@ impl BuildConfig {
                 continue;
             }
 
-            let json: serde_json::Value = serde_json::from_str( &line ).expect( "failed to parse cargo output" );
+            let json: Option<serde_json::Value> = serde_json::from_str( &line ).map_err(|e| {
+                error!("failed to parse cargo output: {}", e);
+                error!("{}", line);
+            }).ok();
+            if json.is_none() {
+                continue;
+            }
+            let json = json.unwrap();
             let line = serde_json::to_string_pretty( &json ).unwrap();
             if let Some( output ) = CargoOutput::parse( &line ) {
                 match output {

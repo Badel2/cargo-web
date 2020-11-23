@@ -354,8 +354,8 @@ struct Build {
     )]
     pub target: Option<Backend>,
     /// Use verbose output
-    #[structopt(short = "v", long)]
-    pub verbose: bool,
+    #[structopt(short = "v", long, parse(from_occurrences))]
+    pub verbose: u8,
 }
 
 impl Default for Build {
@@ -373,7 +373,7 @@ impl Default for Build {
             use_system_emscripten: false,
             release: false,
             target: None,
-            verbose: false,
+            verbose: 0,
         }
     }
 }
