@@ -98,7 +98,7 @@ pub fn process_and_extract( ctx: &mut Context ) -> Vec< JsSnippet > {
         let shim_ty = ctx.fn_ty_by_index( type_index ).unwrap();
         let ty = FnTy {
             params: shim_ty.params.iter().cloned().take( shim_ty.params.len() - 1 ).collect(),
-            return_type: shim_ty.return_type.clone()
+            results: shim_ty.results.clone()
         };
 
         if let Some( &snippet_index ) = snippet_index_by_hash.get( &code_hash ) {

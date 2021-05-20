@@ -28,7 +28,7 @@ pub use parity_wasm::elements::Instruction;
 #[derive(Clone, PartialEq, Debug)]
 pub struct FnTy {
     pub params: Vec< ValueType >,
-    pub return_type: Option< ValueType >
+    pub results: Vec< ValueType >
 }
 
 impl Eq for FnTy {}
@@ -37,7 +37,9 @@ impl Hash for FnTy {
         for param in &self.params {
             (*param as i32).hash( state );
         }
-        self.return_type.clone().map( |ret| ret as i32 ).hash( state );
+        for param in &self.results {
+            (*param as i32).hash( state );
+        }
     }
 }
 
@@ -437,7 +439,7 @@ impl Context {
                         let pw::Type::Function( mut ty ) = ty;
                         ctx.types.insert( ctx.next_type_index, FnTy {
                             params: take( ty.params_mut() ),
-                            return_type: ty.return_type()
+                            results: take( ty.results_mut() ),
                         });
                         ctx.next_type_index += 1;
                     }
@@ -597,6 +599,9 @@ impl Context {
                         });
                     }
                 },
+                pw::Section::DataCount(count) => {
+                    debug!("DataCount section skipped");
+                }
                 pw::Section::Custom( mut section ) => {
                     if section.name() == "name" {
                         let payload = take( section.payload_mut() );
@@ -743,8 +748,8 @@ impl Context {
         for (new_type_index, (old_type_index, ty)) in self.types.into_iter().enumerate_u32() {
             type_map.insert( old_type_index, new_type_index );
             let params = ty.params;
-            let return_ty = ty.return_type;
-            section_types.push( pw::Type::Function( pw::FunctionType::new( params, return_ty ) ) );
+            let results = ty.results;
+            section_types.push( pw::Type::Function( pw::FunctionType::new( params, results ) ) );
         }
 
         let functions = preprocess_entities( self.functions );
@@ -826,12 +831,12 @@ impl Context {
                     section_imports.push( pw::ImportEntry::new(
                         import.module,
                         import.field,
-                        pw::External::Memory( pw::MemoryType::new( limits.min, limits.max, false ) )
+                        pw::External::Memory( pw::MemoryType::new( limits.min, limits.max ) )
                     ));
                     export
                 },
                 MemoryKind::Definition { limits, export } => {
-                    section_memories.push( pw::MemoryType::new( limits.min, limits.max, false ) );
+                    section_memories.push( pw::MemoryType::new( limits.min, limits.max ) );
                     export
                 }
             };
@@ -874,12 +879,12 @@ impl Context {
                 *function_index = functions.index_map.get( &function_index ).cloned().unwrap();
             }
 
-            let entry = pw::ElementSegment::new( 0, Some( pw::InitExpr::new( pointer_table.offset ) ), pointer_table.members, false );
+            let entry = pw::ElementSegment::new( 0, Some( pw::InitExpr::new( pointer_table.offset ) ), pointer_table.members );
             section_elements.push( entry );
         }
 
         for data in self.data {
-            section_data.push( pw::DataSegment::new( 0, Some( pw::InitExpr::new( data.offset ) ), data.value, false ) );
+            section_data.push( pw::DataSegment::new( 0, Some( pw::InitExpr::new( data.offset ) ), data.value ) );
         }
 
         if !section_types.is_empty() {

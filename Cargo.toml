@@ -43,7 +43,7 @@ lazy_static = "1"
 percent-encoding = "1"
 mime_guess = "1"
 
-parity-wasm = "0.35"
+parity-wasm = "0.42.2"
 log = "0.4"
 rustc-demangle = "0.1.5"
 env_logger = "0.6"

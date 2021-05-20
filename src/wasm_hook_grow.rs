@@ -23,7 +23,7 @@ pub fn process( ctx: &mut Context ) {
         return;
     }
 
-    let type_index = ctx.get_or_add_fn_type( FnTy { params: vec![], return_type: None } );
+    let type_index = ctx.get_or_add_fn_type( FnTy { params: vec![], results: vec![] } );
     let on_grow_function_index = ctx.add_function( FunctionKind::Import {
         type_index,
         export: Export::none(),

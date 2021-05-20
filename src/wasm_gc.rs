@@ -149,6 +149,7 @@ pub fn run<I: AsRef<Path>, O: AsRef<Path>>(input: I, output: O) {
             Section::Element(ref mut s) => cx.remap_element_section(s),
             Section::Code(ref mut s) => cx.remap_code_section(s),
             Section::Data(ref mut s) => cx.remap_data_section(s),
+            Section::DataCount(ref mut s) => cx.remap_data_count_section(s),
         };
         if !retain {
             // debug!("remove empty section");
@@ -293,7 +294,7 @@ impl<'a> LiveContext<'a> {
                 for param in f.params() {
                     self.add_value_type(param);
                 }
-                if let Some(ref ret) = f.return_type() {
+                for ret in f.results() {
                     self.add_value_type(ret);
                 }
             }
@@ -306,7 +307,6 @@ impl<'a> LiveContext<'a> {
             ValueType::I64 => {}
             ValueType::F32 => {}
             ValueType::F64 => {}
-            ValueType::V128 => {}
         }
     }
 
@@ -491,7 +491,7 @@ impl<'a> RemapContext<'a> {
         for param in t.params_mut() {
             self.remap_value_type(param);
         }
-        if let Some(m) = t.return_type_mut().as_mut() {
+        for m in t.results_mut() {
             self.remap_value_type(m);
         }
     }
@@ -649,6 +649,11 @@ impl<'a> RemapContext<'a> {
             self.remap_data_segment(data);
         }
         true
+    }
+
+    fn remap_data_count_section(&self, s: &mut u32) -> bool {
+        // unimplemented
+        todo!()
     }
 
     fn remap_data_segment(&self, segment: &mut DataSegment) {
