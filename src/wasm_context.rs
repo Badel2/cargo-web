@@ -644,7 +644,9 @@ impl Context {
                                     }
 
                                 },
-                                kind => panic!( "unknown name section chunk type: {}", kind )
+                                // Unknown name sections appear to be defined here:
+                                // https://github.com/WebAssembly/extended-name-section/blob/master/proposals/extended-name-section/Overview.md
+                                kind => error!( "unknown name section chunk type: {}", kind )
                             }
                         }
                     } else if section.name() == "sourceMappingURL" {
